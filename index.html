@@ -67,14 +67,13 @@ body {
 </style>
 <body>
 
-</style>
 <div id="year-controls">
    <input name="mode" type="radio" value="2015" id="year-mode-2015"><label for="year-mode-2013"> 2015</label>
   <input name="mode" type="radio" value="2014" id="year-mode-2014" checked><label for="year-mode-2014"> 2014</label>
   <input name="mode" type="radio" value="2013" id="year-mode-2013"><label for="year-mode-2013"> 2013</label>
 </div>
 
-<script src="src/d3.v3.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script>
 
@@ -164,7 +163,7 @@ return "M" + x + "," + y
 }
 
 
-d3.csv("src/power_rankings_2014.csv", function(error, data) {
+d3.csv("https://s3-us-west-2.amazonaws.com/d3data.sundaysocialsociety.co/power_rankings_2014.csv", function(error, data) {
   color.domain(d3.keys(data[0]).filter(function(key) { return key !== "week"; }));
 
   var franchises = color.domain().map(function(name) {
@@ -291,7 +290,7 @@ d3.selectAll("#year-controls input[name=mode]").on("change", function() {
 function updateData(year) {
     // Select the section we want to apply our changes to
 
-  d3.csv("src/power_rankings_" + year + ".csv", function(error, data) {
+  d3.csv("https://s3-us-west-2.amazonaws.com/d3data.sundaysocialsociety.co/power_rankings_" + year + ".csv", function(error, data) {
     color.domain(d3.keys(data[0]).filter(function(key) { return key !== "week"; }));
 
   var franchises = color.domain().map(function(name) {
