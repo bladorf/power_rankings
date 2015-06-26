@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+body {
+  font: 10px sans-serif;
+}
+
+.point {
+  r: .8
+  fill: white
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
+.mouseover-line {
+  fill: none;
+  stroke-width: 10px;
+  opacity: .4;
+}
+
+.legend {
+  font-weight: ;
+}
+
+.mouseover-legend {
+  font-weight: bold;
+}
+
+#year-controls {
+  position: absolute;
+  width: 940px;
+  padding: 10px;
+  z-index: 1;
+}
+
+</style>
+<body>
+
+</style>
+<div id="year-controls">
+  <input name="mode" type="radio" value="2014" id="year-mode-2014" checked><label for="year-mode-2014"> 2014</label>
+  <input name="mode" type="radio" value="2013" id="year-mode-2013"><label for="year-mode-2013"> 2013</label>
+</div>
+</style>
+
+<script src="src/d3.min.js"></script>
+<script>
+
+var margin = {top: 80, right: 80, bottom: 30, left: 100},
+    width = 800 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([0, height]);
+
+var color = d3.scale.category20();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right+1000)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+function mouseoverEffects(d) {
+
+    d3.selectAll(".franchise").each( function(e,i) {
+        var elt = d3.select(this);
+        if (d.name == e.name) {
+            var matchingPath = document.getElementById(e.name + "-line");
+            var matchingText = document.getElementById(e.name + "-text");
+            d3.select(matchingPath).attr("class","mouseover-line");
+            d3.select(matchingText).attr("class", "mouseover-legend");
+        };
+    });
+};
+
+function mouseoutEffects(d) {
+
+    d3.selectAll(".franchise").each( function(e,i) {
+        var elt = d3.select(this);
+        if (d.name == e.name) {
+            var matchingPath = document.getElementById(e.name + "-line");
+            var matchingText = document.getElementById(e.name + "-text");
+            d3.select(matchingPath).attr("class","line");
+            d3.select(matchingText).attr("class", "legend");
+        };
+    });
+};
+
+  //function mouseoverPoint(d) {
+  //   tip.show(d);
+  //};
+
+  //function mouseoutPoint(d) {
+  //    tip.hide(d);
+  //};
+
+  function rightRoundedRect(x, y, width, height, radius) {
+  return "M" + x + "," + y
+       + "h" + (width - radius)
+       + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
+       + "v" + (height - 2 * radius)
+       + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
+       + "h" + (radius - width)
+       + "z";
+}
+
+
+// Function to handle the actual visualization for each year's data
+function update(year, svg, run) {
+// Select the section we want to apply our changes to
+//var svg = d3.select("body").transition();
+
+  d3.csv("src/power_rankings_" + year + ".csv", function(error, data) { 
+    
+    color.domain(d3.keys(data[0]).filter(function(key) { return key !== "week"; }));
+
+    var franchises = color.domain().map(function(name) {
+      return {
+        name: name,
+        values: data.map(function(d) {
+          return {name: name, week: +d.week, ranking: +d[name]};
+        })
+      };
+    });
+
+    x.domain([
+      d3.min(franchises, function(c) { return d3.min(c.values, function(v) { return v.week; }); }),
+      d3.max(franchises, function(c) { return d3.max(c.values, function(v) { return v.week; }); })
+    ]);
+
+    y.domain([
+      d3.min(franchises, function(c) { return d3.min(c.values, function(v) { return v.ranking; }); }),
+      d3.max(franchises, function(c) { return d3.max(c.values, function(v) { return v.ranking; }); })
+    ]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Ranking");
+      
+
+    // Chart Title
+
+    //svg.selectAll("#title").exit.remove()
+    var title = svg.append("text")
+          .attr("id", "title")
+          .attr("x", (width / 2))
+          .attr("y", 0 - (margin.top / 2))
+          .attr("text-anchor", "middle")
+          .style("font-size", "16px")
+          .style("text-decoration", "underline")
+          .text(year + " SSS Power Rankings");
+    title.enter()
+    title.exit().remove()
+
+
+    var franchise = svg.selectAll(".franchise")
+        .data(franchises)
+        .enter()
+        .append("g")
+        .attr("class", "franchise");
+
+    var point = franchise.append("g")
+        .attr("class", "line-point");
+
+    point.selectAll('circle')
+        .data(function(d){ return d.values})
+        .enter().append('circle')
+        .attr('class', 'point')
+        .attr("cx", function(d) { return x(d.week) })
+        .attr("cy", function(d) { return y(d.ranking) })
+        .attr("r", 4.5)
+        .style("stroke", function(d) { return color(this.parentNode.__data__.name); }) 
+        .style("fill", function(d) { return color(this.parentNode.__data__.name); }) 
+        //.on('mouseover', mouseoverPoint)
+        //.on('mouseout', mouseoutPoint);
+
+    var line = d3.svg.line()
+        .x(function(d) { return x(d.week); })
+        .y(function(d) { return y(d.ranking); });
+
+    var path = franchise.append("path")
+        .attr("class", "line")
+        .attr('id', function(d) { return d.name+"-line"; })
+        .attr("d", function(d) { return line(d.values); })
+        .style("stroke", function(d) { return color(d.name); })
+        .on('mouseover', mouseoverEffects)
+        .on('mouseout', mouseoutEffects);
+
+    // Legend Text
+    var legendText = franchise.append("text")
+        .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
+        .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
+        .attr('id', function(d) {return d.name+"-text"; })
+        .attr("x", 25)
+        .attr("dy", ".35em")
+        .text(function(d) { return d.name; })
+        .on('mouseover', mouseoverEffects)
+        .on('mouseout', mouseoutEffects)
+        ;
+
+    // Legend Boxes
+    var legend = franchise.append("path")
+        .attr("d", rightRoundedRect(20, -9, 50, 17, 5))
+        .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
+        .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
+        .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
+        .style('fill', 'grey')
+        .style('stroke', 'black')
+        .style('opacity', .08)
+        .on('mouseover', mouseoverEffects)
+        .on('mouseout', mouseoutEffects)
+        ;
+
+  });
+}
+
+
+
+// Enable Year Toggle
+d3.selectAll("#year-controls input[name=mode]").on("change", function() {
+  update(this.value, svg, 1);
+});
+
+
+// Run it all
+update(2014, svg, 0);
+  
+</script>
+

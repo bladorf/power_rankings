@@ -31,6 +31,12 @@ body {
   display: none;
 }
 
+.y.axis.text {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Chrome, Safari, Opera */
+  transform: rotate(90deg);
+}
+
 .line {
   fill: none;
   stroke: steelblue;
@@ -51,11 +57,30 @@ body {
   font-weight: bold;
 }
 
+#year-controls {
+  position: absolute;
+  width: 940px;
+  padding: 10px;
+  z-index: 1;
+}
+
 </style>
 <body>
+
+</style>
+<div id="year-controls">
+   <input name="mode" type="radio" value="2015" id="year-mode-2015"><label for="year-mode-2013"> 2015</label>
+  <input name="mode" type="radio" value="2014" id="year-mode-2014" checked><label for="year-mode-2014"> 2014</label>
+  <input name="mode" type="radio" value="2013" id="year-mode-2013"><label for="year-mode-2013"> 2013</label>
+</div>
+
 <script src="src/d3.v3.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script>
+
+
+
+var transition_duration = 1000;
 
 var margin = {top: 80, right: 80, bottom: 30, left: 100},
     width = 800 - margin.left - margin.right,
@@ -89,6 +114,56 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+function mouseoverEffects(d) {
+
+    //d3.select("svg")
+    //  .style("background-image", "url(src/hags.jpg)")
+    //  .style("background-repeat", "no-repeat")
+    //  .style("background-attachment", "fixed")
+    //  .style("background-position", "center");
+
+    d3.selectAll(".franchise").each( function(e,i) {
+        var elt = d3.select(this);
+        if (d.name == e.name) {
+            var matchingPath = document.getElementById(e.name + "-line");
+            var matchingText = document.getElementById(e.name + "-text");
+            d3.select(matchingPath).attr("class","mouseover-line");
+            d3.select(matchingText).attr("class", "mouseover-legend");
+        };
+    });
+};
+
+function mouseoutEffects(d) {
+
+
+    //d3.select("svg")
+    //  .style("background-image", "url(src/sss_logo_white.png)")
+    //  .style("background-repeat", "no-repeat")
+    //  .style("background-attachment", "fixed")
+    //  .style("background-position", "center");
+
+    d3.selectAll(".franchise").each( function(e,i) {
+        var elt = d3.select(this);
+        if (d.name == e.name) {
+            var matchingPath = document.getElementById(e.name + "-line");
+            var matchingText = document.getElementById(e.name + "-text");
+            d3.select(matchingPath).attr("class","line");
+            d3.select(matchingText).attr("class", "legend");
+        };
+    });
+};
+
+function rightRoundedRect(x, y, width, height, radius) {
+return "M" + x + "," + y
+     + "h" + (width - radius)
+     + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
+     + "v" + (height - 2 * radius)
+     + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
+     + "h" + (radius - width)
+     + "z";
+}
+
+
 d3.csv("src/power_rankings_2014.csv", function(error, data) {
   color.domain(d3.keys(data[0]).filter(function(key) { return key !== "week"; }));
 
@@ -107,14 +182,14 @@ d3.csv("src/power_rankings_2014.csv", function(error, data) {
   ]);
 
   y.domain([
-    d3.min(franchises, function(c) { return d3.min(c.values, function(v) { return v.ranking; }); }),
+    1,
     d3.max(franchises, function(c) { return d3.max(c.values, function(v) { return v.ranking; }); })
   ]);
 
   svg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
+      .call(xAxis)
 
   svg.append("g")
       .attr("class", "y axis")
@@ -124,62 +199,12 @@ d3.csv("src/power_rankings_2014.csv", function(error, data) {
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text("Ranking");
- 
-  var tip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset([-10, 0])
-      .html(function(d) {
-          return "<strong>" + d.name + "</strong><hr>"  + 
-    "<strong>Week:</strong> <span style='color:red'>" + d.week + "<br><br></span>" + 
-    "<strong>Rank:</strong> <span style='color:red'>" + d.ranking + "</span>";
-      });
+      .text("Ranking")
 
-  svg.call(tip);
-  
-  function mouseoverEffects(d) {
-
-      d3.selectAll(".franchise").each( function(e,i) {
-          var elt = d3.select(this);
-          if (d.name == e.name) {
-              var matchingPath = document.getElementById(e.name + "-line");
-              var matchingText = document.getElementById(e.name + "-text");
-              d3.select(matchingPath).attr("class","mouseover-line");
-              d3.select(matchingText).attr("class", "mouseover-legend");
-          };
-      });
-  };
-
-  function mouseoutEffects(d) {
-
-      d3.selectAll(".franchise").each( function(e,i) {
-          var elt = d3.select(this);
-          if (d.name == e.name) {
-              var matchingPath = document.getElementById(e.name + "-line");
-              var matchingText = document.getElementById(e.name + "-text");
-              d3.select(matchingPath).attr("class","line");
-              d3.select(matchingText).attr("class", "legend");
-          };
-      });
-  };
-
-  //function mouseoverPoint(d) {
-  //   tip.show(d);
-  //};
-
-  //function mouseoutPoint(d) {
-  //    tip.hide(d);
-  //};
-
-  function rightRoundedRect(x, y, width, height, radius) {
-  return "M" + x + "," + y
-       + "h" + (width - radius)
-       + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
-       + "v" + (height - 2 * radius)
-       + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
-       + "h" + (radius - width)
-       + "z";
-}
+    //d3.select("svg")
+    //  .style("background-image", "url(src/sss_logo_white.png)")
+    //  .style("background-repeat", "no-repeat")
+    //  .style("background-position", "right");
 
   var franchise = svg.selectAll(".franchise")
       .data(franchises)
@@ -210,9 +235,11 @@ d3.csv("src/power_rankings_2014.csv", function(error, data) {
       .on('mouseover', mouseoverEffects)
       .on('mouseout', mouseoutEffects);
 
+  // Legend Text
   var legendText = franchise.append("text")
       .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
       .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
+      .attr("class", "legend")
       .attr('id', function(d) {return d.name+"-text"; })
       .attr("x", 25)
       .attr("dy", ".35em")
@@ -221,10 +248,11 @@ d3.csv("src/power_rankings_2014.csv", function(error, data) {
       .on('mouseout', mouseoutEffects)
       ;
 
+  // Legend Boxes
   var legend = franchise.append("path")
       .attr("d", rightRoundedRect(20, -9, 50, 17, 5))
+      .attr("class", "box")
       .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-      .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
       .attr("transform", function(d) { return "translate(" + x(d.value.week) + "," + y(d.value.ranking) + ")"; })
       .style('fill', 'grey')
       .style('stroke', 'black')
@@ -233,16 +261,206 @@ d3.csv("src/power_rankings_2014.csv", function(error, data) {
       .on('mouseout', mouseoutEffects)
       ;
 
+  // Chart Title
   svg.append("text")
-        .attr("x", (width / 2))
-        .attr("y", 0 - (margin.top / 2))
-        .attr("text-anchor", "middle")
-        .style("font-size", "16px")
-        .style("text-decoration", "underline")
-        .text("2014 SSS Power Rankings");
+      .attr("x", (width / 2))
+      .attr("y", 0 - (margin.top / 2))
+      .attr("text-anchor", "middle")
+      .attr("class", "title")
+      .style("font-size", "16px")
+      .style("text-decoration", "underline")
+      .text("2014 SSS Power Rankings");
+
+  // X Axis Label
+  svg.append("text")
+      .attr("x", (width / 2))
+      .attr("y", height + margin.bottom)
+      .attr("text-anchor", "middle")
+      .style("font-size", "12px")
+      .text("Week");
 
 
 });
-  
+
+// Enable Year Toggle
+d3.selectAll("#year-controls input[name=mode]").on("change", function() {
+  updateData(this.value);
+});
+
+
+function updateData(year) {
+    // Select the section we want to apply our changes to
+
+  d3.csv("src/power_rankings_" + year + ".csv", function(error, data) {
+    color.domain(d3.keys(data[0]).filter(function(key) { return key !== "week"; }));
+
+  var franchises = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {name: name, week: +d.week, ranking: +d[name]};
+      })
+    };
+  });
+
+  var line = d3.svg.line()
+    .x(function(d) { return x(d.week); })
+    .y(function(d) { return y(d.ranking); });
+
+  x.domain([
+    d3.min(franchises, function(c) { return d3.min(c.values, function(v) { return v.week; }); }),
+    d3.max(franchises, function(c) { return d3.max(c.values, function(v) { return v.week; }); })
+  ]);
+
+  y.domain([
+    1,
+    d3.max(franchises, function(c) { return d3.max(c.values, function(v) { return v.ranking; }); })
+  ]);
+
+
+  var svg = d3.select("body").transition()
+
+  // Keep track of which element we're updating
+  var franchise_counter = -1;
+  var x_counter = -1;
+  var y_counter = -1;
+  var legend_counter = -1;
+  var box_counter = -1;
+  var opacity_counter = -1;
+
+  // Update Lines
+  svg.selectAll(".line")
+      .duration(transition_duration)
+      .attr("d", function(d) { franchise_counter += 1; return updateLine(franchises, franchise_counter); });
+
+  // Update Points
+  svg.selectAll('.point')
+      .duration(transition_duration)
+      .attr("cx", function(d) { x_counter +=1; return updatePoint(franchises, x_counter, 'x'); })
+      .attr("cy", function(d) { y_counter +=1; return updatePoint(franchises, y_counter, 'y'); })
+      .style("opacity", function(d) { opacity_counter +=1; return updatePointOpacity(franchises, opacity_counter); }) ;
+
+  // Update X Axis
+  svg.selectAll(".x.axis") // change the x axis
+      .duration(transition_duration)
+      .call(xAxis);
+
+  // Update Y Axis
+  svg.selectAll(".y.axis") // change the y axis
+      .duration(transition_duration)
+      .call(yAxis);
+
+  // Update Legend
+  svg.selectAll(".legend")
+      .duration(transition_duration)
+      .attr("transform", function(d) {legend_counter +=1; return updateLegend(franchises, legend_counter); })
+
+  // Legend Legend Boxes
+  svg.selectAll(".box")
+      .duration(transition_duration)
+      .attr("transform", function(d) {box_counter +=1; return updateLegend(franchises, box_counter); })
+
+  // Update Title
+  svg.selectAll(".title")
+      .text(year + " SSS Power Rankings");
+
+
+  });
+}
+
+function updateLine(data, counter) {
+
+  weeks = data[counter].values.length - 1;
+
+  // Find the last week of non-zero data return a line of that length
+  last_non_zero_week = 0; 
+  for (var i = weeks; i > 0; i--) {
+    if (data[counter].values[i].ranking == 0) {
+      continue
+    }
+    else {
+      last_non_zero_week = i
+      break
+    }
+  };
+  return line(data[counter].values.slice(0,last_non_zero_week + 1));
+};
+
+function updatePoint(data, counter, dimension) {
+  weeks = 16;
+  franchise_counter = Math.floor(counter / weeks);
+  week_counter = counter - franchise_counter * weeks;
+    
+  // Find the last week of non-zero data and put future points at that ranking
+  last_non_zero_week = 0; 
+  for (var i = week_counter; i > 0; i--) {
+    if (data[franchise_counter].values[i].ranking == 0) {
+      continue
+    }
+    else {
+      last_non_zero_week = i
+      break
+    }
+  };
+
+  last_week_point = data[franchise_counter].values[last_non_zero_week];
+  current_week_point = data[franchise_counter].values[week_counter];
+
+    
+  if (dimension == 'x') {
+    return x(current_week_point.week);
+  }
+  else {
+    return y(last_week_point.ranking);
+  }
+
+};
+
+function updatePointOpacity(data, counter) {
+  weeks = 16;
+  franchise_counter = Math.floor(counter / weeks);
+  week_counter = counter - franchise_counter * weeks;
+
+  // Find the last week of non-zero data and make future points opaque
+  last_non_zero_week = 0; 
+  for (var i = week_counter; i > 0; i--) {
+    if (data[franchise_counter].values[i].ranking == 0) {
+      continue
+    }
+    else {
+      last_non_zero_week = i
+      break
+    }
+  };
+
+  if (week_counter == last_non_zero_week) {opacity = 1}
+  else {opacity = .1}
+
+  return opacity;
+}
+
+function updateLegend(data, counter) {
+  weeks = data[counter].values.length - 1;
+
+  // Find the last week of non-zero data and order the teams by that week
+  last_non_zero_week = 0; 
+  for (var i = weeks; i > 0; i--) {
+    if (data[counter].values[i].ranking == 0) {
+      continue
+    }
+    else {
+      last_non_zero_week = i
+      break
+    }
+  };
+
+  exists_x = data[counter].values[weeks];
+  exists_y = data[counter].values[last_non_zero_week];
+
+  if (typeof(exists_x) == 'undefined') {}
+  else if (typeof(exists_y) == 'undefined') {}
+  else {return "translate(" + x(exists_x.week) + "," + y(exists_y.ranking) + ")";}
+};
+
 </script>
 
