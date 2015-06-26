@@ -1,0 +1,5 @@
+{
+  "data": ["src/power_rankings_2015.csv", "src/power_rankings_2014.csv", "power_rankings_2013.csv"],
+  "javascript": ["src/d3.min.js"],
+  "html": ["index.html"],
+}
