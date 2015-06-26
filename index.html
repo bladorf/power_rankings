@@ -75,6 +75,9 @@ body {
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
+<div id="viz"></div>
+
 <script>
 
 
@@ -107,7 +110,7 @@ var line = d3.svg.line()
     .x(function(d) { return x(d.week); })
     .y(function(d) { return y(d.ranking); });
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#viz").append("svg")
     .attr("width", width + margin.left + margin.right+1000)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
